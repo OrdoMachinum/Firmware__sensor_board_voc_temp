@@ -1,5 +1,7 @@
-/* General Queue library
- * heavily inspired by Embedded Sw fundamentals by A. G. Dean */
+/*
+ * General Queue library
+ * heavily inspired by Embedded Sw fundamentals by A. G. Dean
+ */
 
 #ifndef QUEUE_H_
 #define QUEUE_H_

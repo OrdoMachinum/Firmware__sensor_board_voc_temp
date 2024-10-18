@@ -20,9 +20,8 @@ void UART1_init(void)
      * PB6 to UART_TX
      * PB7 to UART_RX */
 
-
-
 #else
+
     GPIOA->MODER &= ~GPIO_MODER_MODE2_Msk;
     GPIOA->MODER |= GPIO_MODER_MODE2_1;
 
@@ -38,16 +37,13 @@ void UART1_init(void)
 
     PERIPH_UART->BRR = F_USART_CLOCK / BAUD_RATE;
 
-    /* Default settings in CR are good for now:
+    /* Default settings in CR are good for now for STLINK-usb communication:
      * No Parity,
      * 8 data bit,
      * 1 Stop bit  */
 
     /* Enabling */
     PERIPH_UART->CR1 |= USART_CR1_UE | USART_CR1_RE | USART_CR1_TE;
-
-
-
 }
 
 void UART1_transmit(const uint8_t dataByte)
@@ -59,7 +55,7 @@ void UART1_transmit(const uint8_t dataByte)
 
 uint8_t UART1_receive(void)
 {
-    while (! (PERIPH_UART->ISR & USART_ISR_RXNE)) /* Busy wait fot not-empty (or full) RX Fifo */
+    while (! (PERIPH_UART->ISR & RXNE_MASK)) /* Busy wait fot not-empty (or full) RX Fifo */
         ;
     return PERIPH_UART->RDR;
 }

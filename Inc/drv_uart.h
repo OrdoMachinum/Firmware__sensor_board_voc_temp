@@ -1,8 +1,6 @@
 /*
- * drv_uart.h
- *
- *  Created on: Oct 13, 2024
- *      Author: riddick
+ * General UART library,
+ * heavily inspired by Embedded Sw fundamentals by A. G. Dean
  */
 
 #ifndef DRV_UART_H_
