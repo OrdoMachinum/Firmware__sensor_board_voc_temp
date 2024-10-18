@@ -8,6 +8,6 @@
 #ifndef DRV_I2C_H_
 #define DRV_I2C_H_
 
-
+#include "targetspec.h"
 
 #endif /* DRV_I2C_H_ */
