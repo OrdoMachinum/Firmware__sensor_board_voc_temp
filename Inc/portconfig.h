@@ -23,5 +23,6 @@
 
 
 void init(void);
+void initSysTick(void);
 
 #endif /* PORTCONFIG_H_ */

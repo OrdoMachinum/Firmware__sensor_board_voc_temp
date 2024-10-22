@@ -59,3 +59,11 @@ uint8_t UART1_receive(void)
         ;
     return PERIPH_UART->RDR;
 }
+uint8_t UART1_receiveAsync(void)
+{
+    if(PERIPH_UART->ISR & RXNE_MASK) {
+        return PERIPH_UART->RDR;
+    }else{
+        return 0u;
+    }
+}

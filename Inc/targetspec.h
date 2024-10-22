@@ -9,6 +9,12 @@
 
 #include <stdint.h>
 
+#define I2C_ADDR_SHT4X  ((uint8_t)0x44)
+#define I2C_ADDR_SGP41  ((uint8_t)0x59)
+
+#define LSB_OF2(twoByte)    (uint8_t)(twoByte & 0xFF)
+#define MSB_OF2(twoByte)    (uint8_t)((twoByte>>8u) & 0xFF)
+
 
 #if defined(STM32G030xx)    /* Target is on the original PCB */
 
@@ -34,7 +40,7 @@
  * 100 kHz I2C freq.
  * 100 ns rise t.
  *  10 ns fall t. */
-#define I2C_TIMING_REG  0x00503D5B
+#define I2C_TIMING_REG  0x00503D58
 
 #else
 #error "Target is not supported!"

@@ -15,6 +15,7 @@
 void UART1_init(void);
 void UART1_transmit(const uint8_t dataByte);
 uint8_t UART1_receive(void);
+uint8_t UART1_receiveAsync(void);
 
 
 

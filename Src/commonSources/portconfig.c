@@ -23,3 +23,9 @@ void init(void)
 
 #endif
 }
+
+
+void initSysTick(void)
+{
+
+}
