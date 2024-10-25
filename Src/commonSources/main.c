@@ -3,6 +3,7 @@
  */
 
 
+#include <string.h>
 #include "targetspec.h"
 
 
@@ -30,19 +31,6 @@ dtMeasFSM State = PreInit;
 volatile uint32_t msTick = 300u;
 volatile bool expired = false;
 
-bool    trhAvailable = false;
-uint8_t trhTicksResult[6] = {
-        /* initialization with default temp. and hum.
-         * So it can be used as the initial compensation value for the SGP4x */
-        0x80,
-        0x00,
-        0xA2,
-        0x66,
-        0x66,
-        0x93};
-
-uint8_t vocTicksResult[6] = {0};
-
 void SysTick_Handler(void)
 {
     msTick--;
@@ -51,11 +39,25 @@ void SysTick_Handler(void)
 
 int main(void)
 {
-    uint8_t recievedData, transmittedData;
-    uint8_t buffer[10] = {0};
+    uint8_t recievedData = {0};
+    uint8_t buffer [14u] = {
+            0x00,   /* Reserved for SGP4 command bytes */
+            0x00,   /* Reserved for SGP4 command bytes */
+
+            /* initialization with default temp. and hum.
+             * So it can be used as the initial compensation value for the SGP4x */
+            0x80,
+            0x00,
+            0xA2,
+            0x66,
+            0x66,
+            0x93,
+    };
+
+    uint8_t * trhTicksResult = buffer+2u;
+    uint8_t * vocTicksResult = buffer+8u;
 
     SystemCoreClockUpdate();
-
     SysTick_Config(SystemCoreClock / 1000);
 
     init();
@@ -72,38 +74,27 @@ int main(void)
         switch(State) {
 
         case PreInit:
+            /* Wait for everything to power up */
             if(expired){
                 State = Init;
             }
             break;
 
         case Init:
+            //State = ReadyToMeasure; break;
 
-            buffer[0] = MSB_OF2(sgp41_execute_conditioning);
-            buffer[1] = LSB_OF2(sgp41_execute_conditioning);
-            buffer[2] = trhTicksResult[0];
-            buffer[3] = trhTicksResult[1];
-            buffer[4] = trhTicksResult[2];
-            buffer[5] = trhTicksResult[3];
-            buffer[6] = trhTicksResult[4];
-            buffer[7] = trhTicksResult[5];
-
-            if(!I2C_write(I2C_ADDR_SGP41, buffer, 8u)) {
-            //if(false) {
+            if(!SGP41_conditioning()) {
                 State = Error;
-            }else {
+
+            } else {
                 msTick = 2500u;
                 expired = false;
-
                 State = HeatUp;
             }
-
-
-
             break;
 
         case HeatUp:
-            UART1_transmit('_');
+
             if(expired){
                 State = ReadyToMeasure;
                 UART1_transmit('>');
@@ -114,18 +105,11 @@ int main(void)
 
             if('?'== recievedData ){
 
-                buffer[0] = SHT4X_M_TRH_MEPREC;
-                I2C_write(I2C_ADDR_SHT4X, buffer, 1u);
+                SHT4x_startMeasure(SHT4X_M_TRH_HIPREC);
+                SGP41_startMeasure(buffer);
 
-                buffer[0] = MSB_OF2(sgp41_measure_raw_signals);
-                buffer[1] = LSB_OF2(sgp41_measure_raw_signals);
-
-                //I2C_write(I2C_ADDR_SGP41, buffer, 2u);
-                //I2C_write(I2C_ADDR_SGP41, trhTicksResult, 6u);
-
-                msTick = 50u;
+                msTick = 80u;
                 expired = false;
-
                 State = Measuring;
             }
             break;
@@ -142,8 +126,8 @@ int main(void)
 
         case Finished:
 
-            I2C_read(I2C_ADDR_SHT4X, trhTicksResult, 6);
-            //I2C_read(I2C_ADDR_SGP41, vocTicksResult, 6);
+            SHT4X_getResults(trhTicksResult);
+            SGP41_getResults(vocTicksResult);
 
             UART1_transmit(trhTicksResult[0]);
             UART1_transmit(trhTicksResult[1]);
