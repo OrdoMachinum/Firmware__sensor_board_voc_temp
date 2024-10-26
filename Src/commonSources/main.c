@@ -39,11 +39,12 @@ void SysTick_Handler(void)
 
 int main(void)
 {
+    bool    sgpPresent = true;
+    bool    shtPresent = true;
     uint8_t recievedData = {0};
     uint8_t buffer [14u] = {
             0x00,   /* Reserved for SGP4 command bytes */
             0x00,   /* Reserved for SGP4 command bytes */
-
             /* initialization with default temp. and hum.
              * So it can be used as the initial compensation value for the SGP4x */
             0x80,
@@ -53,7 +54,6 @@ int main(void)
             0x66,
             0x93,
     };
-
     uint8_t * trhTicksResult = buffer+2u;
     uint8_t * vocTicksResult = buffer+8u;
 
@@ -70,47 +70,45 @@ int main(void)
 
         recievedData = UART1_receiveAsync();
 
-
         switch(State) {
-
-        case PreInit:
-            /* Wait for everything to power up */
+        case PreInit: /* Wait for everything to power up */
             if(expired){
                 State = Init;
             }
             break;
 
-        case Init:
-            //State = ReadyToMeasure; break;
-
-            if(!SGP41_conditioning()) {
-                State = Error;
-
-            } else {
+        case Init:  //State = ReadyToMeasure; break; // to bypass SGP init if needed
+            sgpPresent = SGP41_conditioning();
+            if(sgpPresent){
                 msTick = 2500u;
                 expired = false;
                 State = HeatUp;
+            } else {
+                State = ReadyToMeasure;
             }
             break;
 
         case HeatUp:
-
             if(expired){
                 State = ReadyToMeasure;
                 UART1_transmit('>');
             }
 
-
         case ReadyToMeasure:
+            if ('?' == recievedData) {
+                shtPresent = SHT4x_startMeasure(SHT4X_M_TRH_HIPREC);
 
-            if('?'== recievedData ){
+                if(sgpPresent) {
+                    SGP41_startMeasure(buffer);
+                }
 
-                SHT4x_startMeasure(SHT4X_M_TRH_HIPREC);
-                SGP41_startMeasure(buffer);
-
-                msTick = 80u;
-                expired = false;
-                State = Measuring;
+                if(!sgpPresent && !shtPresent){
+                    State = Error;
+                } else {
+                    msTick = 80u;
+                    expired = false;
+                    State = Measuring;
+                }
             }
             break;
 
@@ -120,12 +118,9 @@ int main(void)
                 State = Finished;
                 UART1_transmit('>');
             }
-
             break;
 
-
         case Finished:
-
             SHT4X_getResults(trhTicksResult);
             SGP41_getResults(vocTicksResult);
 
@@ -145,13 +140,11 @@ int main(void)
             break;
 
         default:
-
         case Error:
             UART1_transmit('X');
-            State = ReadyToMeasure;
+//            State = ReadyToMeasure;
+            break;
         }
-
-
     }
     return 1;
 }

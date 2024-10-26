@@ -72,7 +72,7 @@ uint8_t I2C_write(
 
         I2C1->TXDR = *buffer++;
         while (!(I2C1->ISR & I2C_ISR_TXE)) {
-            /* wait until transmission is sent */
+            /* wait until current byte is sent */
         }
         byteWritten++;
     }
