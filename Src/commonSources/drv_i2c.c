@@ -55,7 +55,7 @@ uint8_t I2C_write(
 {
     uint8_t byteWritten = 0u;
     uint32_t controlReg = (devAdd << 1u << I2C_CR2_SADD_Pos);
-    controlReg |= 1u << I2C_CR2_NBYTES_Pos; // data bytes + register address
+    controlReg |= datLen << I2C_CR2_NBYTES_Pos; // data bytes + register address
     controlReg |= 1u << I2C_CR2_START_Pos;
 
     I2C1->CR2 = controlReg;
@@ -65,6 +65,7 @@ uint8_t I2C_write(
     }
 
     if(I2C1->ISR & I2C_ISR_NACKF_Msk) {
+        I2C1->ICR |= I2C_ICR_NACKCF;
         return byteWritten;
     }
 
@@ -95,6 +96,11 @@ void I2C_writeReg(
 
     while (I2C1->CR2 & I2C_CR2_START) {
         /* Busy wait until Start, and device address are sent, so this bit is cleared by HW*/
+    }
+
+    if(I2C1->ISR & I2C_ISR_NACKF_Msk) {
+        I2C1->ICR |= I2C_ICR_NACKCF;
+        return;
     }
 
     I2C1->TXDR = devReg; /* Sending device register now */

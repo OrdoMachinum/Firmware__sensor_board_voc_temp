@@ -122,8 +122,12 @@ int main(void)
             break;
 
         case Finished:
-            SHT4X_getResults(trhTicksResult);
-            SGP41_getResults(vocTicksResult);
+            if(shtPresent){
+                SHT4X_getResults(trhTicksResult);
+            }
+            if(sgpPresent){
+                SGP41_getResults(vocTicksResult);
+            }
 
             UART1_transmit(trhTicksResult[0]);
             UART1_transmit(trhTicksResult[1]);
