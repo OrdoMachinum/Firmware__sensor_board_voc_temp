@@ -93,6 +93,7 @@ int main(void)
                 State = ReadyToMeasure;
                 UART1_transmit('>');
             }
+            break;
 
         case ReadyToMeasure:
             if ('?' == recievedData) {
