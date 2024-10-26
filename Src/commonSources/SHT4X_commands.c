@@ -11,8 +11,7 @@
 uint8_t SHT4x_startMeasure(
     uint8_t command)
 {
-    uint8_t buff = SHT4X_M_TRH_HIPREC;
-    return I2C_write(I2C_ADDR_SHT4X, &buff, 1u);
+    return I2C_write(I2C_ADDR_SHT4X, &command, 1u);
 }
 
 uint8_t SHT4X_getResults(
